@@ -14,9 +14,9 @@ function deepClone(obj, hash = new WeakMap()) {
     if (obj == null) { return obj; }
     if (obj instanceof RegExp) { return new RegExp(boj); }//处理正则类型数据
     if (obj instanceof Date) { return new Date(obj); }//处理时间类型数据
-    if (typeof obj !== 'object') { return obj; }//返回函数等正常值
+    if (typeof obj !== 'object') { return obj; }//note：如果对象属性是基本数据类型则不要再继续递归拷贝了 已经到底了！
     if (hash.has(obj)) { return hash.get(obj); }//ingenious：查询循环引用 即复用
-    const copy = new obj.constructor();//根据constructor实例化数组、对象
+    const copy = new obj.constructor();//note：根据constructor实例化数组、对象
     hash.set(obj, copy);//设置hash值 用于查询循环引用
     for (const key in  obj) {
         //ingeniouss：循环对象属性 原型链的值 不拷贝
