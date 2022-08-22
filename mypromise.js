@@ -8,7 +8,7 @@ class Mypromise {
                         // mypromise:12 onFulfilledList
                         // mypromise:12 onRejectedList
     this.initBind();
-    console.log(this + '00');
+  
     // 创建时需要一个函数，否则会报错
     if (!excutor instanceof Function) {
       throw new Error("请传入一个函数");
@@ -18,6 +18,45 @@ class Mypromise {
     } catch (error) {
       this.reject(error);
     }
+  }
+  all (list) {
+    if (list === null || !list[Symbol.iterator])
+        throw new Error("the param expected a iterator object!!!")
+    // 获取 result 的状态
+    let res, rej ;
+    let result = new Mypromise((resolve, reject) => {
+        res = resolve ;
+        rej = reject ;
+    }) ;
+    // 设置 result 的状态
+    let count = 0 ; //数量 也是list中参数的索引
+    let fulfilledCount = 0 ; // 完成的数量
+    let p = [] ; // 储存每个promise的返回值
+    for (const promise of list) {
+        const i = count ;
+        count++ ;
+        new Mypromise((resolve, reject) => {
+            console.log(promise instanceof Mypromise, promise.state === 'rejected');
+            if (promise instanceof Mypromise && promise.state === 'rejected')
+                reject(promise) ;
+            resolve(promise) ;
+        }).then((data) => {
+            // 将成功的数据汇总到 result
+            p[i] = data ;
+            // 判断是不是全部成功
+            fulfilledCount++ ;
+            console.log(fulfilledCount);
+            if (fulfilledCount === count) 
+                res(p) ;
+        }, (data) => {
+            // 将失败的数据汇总到 result
+            p[i] = data ;
+            rej(p) ;
+        }) ;
+    }
+    if (count === 0)
+        res(p) ;
+    return result ;
   }
   // 展示调用对象的键名
   showKeys() {
@@ -192,29 +231,42 @@ var i = 1;
 //     }, 1000)
 // }).then(res => console.log(res), err => console.log(err))
 
-const test3 = new Mypromise((resolve, reject) => {
-  resolve(100); // 输出 状态：成功 值： 200
-  // reject(100) // 输出 状态：成功 值：300
-})
-  .then(
-    (res) => 2 * res,
-    (err) => 3 * err
-  )
-  .then(
-    (res) => console.log("成功", res),
-    (err) => console.log("失败", err)
-  );
+// const test3 = new Mypromise((resolve, reject) => {
+//   resolve(100); // 输出 状态：成功 值： 200
+//   // reject(100) // 输出 状态：成功 值：300
+// })
+//   .then(
+//     (res) => 2 * res,
+//     (err) => 3 * err
+//   )
+//   .then(
+//     (res) => console.log("成功", res),
+//     (err) => console.log("失败", err)
+//   );
 
-const test4 = new Mypromise((resolve, reject) => {
-  resolve(100); // 输出 状态：失败 值：200
-  // reject(100) // 输出 状态：成功 值：300
-  // 这里可没搞反哦。真的搞懂了，就知道了为啥这里是反的
-})
-  .then(
-    (res) => new Mypromise((resolve, reject) => reject(2 * res)),
-    (err) => new Mypromise((resolve, reject) => resolve(3 * err))
-  )
-  .then(
-    (res) => console.log("成功", res),
-    (err) => console.log("失败", err)
-  );
+// const test4 = new Mypromise((resolve, reject) => {
+//   resolve(100); // 输出 状态：失败 值：200
+//   // reject(100) // 输出 状态：成功 值：300
+//   // 这里可没搞反哦。真的搞懂了，就知道了为啥这里是反的
+// })
+//   .then(
+//     (res) => new Mypromise((resolve, reject) => reject(2 * res)),
+//     (err) => new Mypromise((resolve, reject) => resolve(3 * err))
+//   )
+//   .then(
+//     (res) => console.log("成功", res),
+//     (err) => console.log("失败", err)
+//   );
+
+
+console.log(
+    new Mypromise().all([
+        new Mypromise((resolve, reject) => {
+            reject(99) ;
+        }),
+        2,
+        new Mypromise((resolve, reject) => {
+            reject(88) ;
+        }),
+    ])
+) ;
